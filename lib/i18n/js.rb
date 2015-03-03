@@ -64,11 +64,28 @@ module I18n
     end
 
     def self.filtered_translations
-      {}.tap do |result|
+      results = {}.tap do |result|
         translation_segments.each do |filename, translations|
           deep_merge!(result, translations)
         end
       end
+      convert_ordered_hash(results)
+    end
+
+    def self.convert_ordered_hash(results)
+      hash = ActiveSupport::OrderedHash.new
+      results.each do |k, values|
+        if values.is_a?(Hash)
+          sort_key_values = ActiveSupport::OrderedHash.new
+          values.keys.map(&:to_s).sort.each do |k|
+            sort_key_values[k.to_sym] = values[k.to_sym]
+          end
+          hash[k] = convert_ordered_hash(sort_key_values)
+        else
+          hash[k] = values
+        end
+      end
+      hash
     end
 
     def self.translation_segments
