@@ -74,15 +74,13 @@ module I18n
 
     def self.convert_ordered_hash(results)
       hash = ActiveSupport::OrderedHash.new
-      results.each do |k, values|
-        if values.is_a?(Hash)
-          sort_key_values = ActiveSupport::OrderedHash.new
-          values.keys.map(&:to_s).sort.each do |k|
-            sort_key_values[k.to_sym] = values[k.to_sym]
-          end
-          hash[k] = convert_ordered_hash(sort_key_values)
+      keys = results.keys.map(&:to_s).sort
+      keys.each do |key|
+        if results[key.to_sym].is_a?(Hash)
+          value = (results[key.to_sym]).deep_dup
+          hash[key.to_sym] = convert_ordered_hash(value)
         else
-          hash[k] = values
+          hash[key.to_sym] = results[key.to_sym]
         end
       end
       hash
